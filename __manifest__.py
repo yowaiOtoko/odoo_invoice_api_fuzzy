@@ -7,6 +7,7 @@
         'account',
         'product',
         'sale',
+        'web',
     ],
     'data': [
         'security/ir.model.access.csv',
