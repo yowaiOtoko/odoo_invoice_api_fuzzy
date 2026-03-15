@@ -165,15 +165,18 @@ class ProductResolver(models.AbstractModel):
                 }
 
         default_uom = self._get_default_uom()
-        created = self.env['product.template'].create({
+        create_vals = {
             'name': name,
             'type': 'service',
-            'detailed_type': detailed_type,
             'list_price': price or 0.0,
             'company_id': company_id,
             'uom_id': default_uom.id,
-            'uom_po_id': default_uom.id,
-        })
+        }
+        if 'detailed_type' in self.env['product.template']._fields:
+            create_vals['detailed_type'] = detailed_type
+        if 'uom_po_id' in self.env['product.template']._fields:
+            create_vals['uom_po_id'] = default_uom.id
+        created = self.env['product.template'].create(create_vals)
         _logger.info(
             'Product created from name: template_id=%s name=%s',
             created.id,
