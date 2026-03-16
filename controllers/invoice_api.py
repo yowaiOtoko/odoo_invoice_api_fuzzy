@@ -5,9 +5,10 @@ from odoo.http import request
 class InvoiceAPIController(http.Controller):
 
     def _line_item_from_payload_item(self, item):
+        price = item.get('price_unit', item.get('price'))
         if 'product_id' in item:
-            return {'product_id': item['product_id'], 'quantity': item.get('qty', item.get('quantity', 1)), 'price_unit': item.get('price'), 'price': item.get('price'), 'discount': item.get('discount'), 'name': item.get('name'), 'description': item.get('description')}
-        return {'product_name': item.get('name', item.get('product_name')), 'quantity': item.get('qty', item.get('quantity', 1)), 'price_unit': item.get('price'), 'price': item.get('price'), 'discount': item.get('discount'), 'detailed_type': item.get('detailed_type', 'service'), 'name': item.get('name'), 'description': item.get('description')}
+            return {'product_id': item['product_id'], 'quantity': item.get('qty', item.get('quantity', 1)), 'price_unit': price, 'price': price, 'discount': item.get('discount'), 'name': item.get('name'), 'description': item.get('description')}
+        return {'product_name': item.get('name', item.get('product_name')), 'quantity': item.get('qty', item.get('quantity', 1)), 'price_unit': price, 'price': price, 'discount': item.get('discount'), 'detailed_type': item.get('detailed_type', 'service'), 'name': item.get('name'), 'description': item.get('description')}
 
     @http.route(
         '/api/invoice',
