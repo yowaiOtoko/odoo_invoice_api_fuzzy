@@ -41,6 +41,30 @@ class InvoiceAPIController(http.Controller):
             return {'error': str(e)}
 
     @http.route(
+        '/api/invoice/update',
+        type='json',
+        auth='api_key',
+        methods=['POST'],
+        csrf=False,
+    )
+    def update_invoice(self, **payload):
+        invoice_id = payload.get('id') or payload.get('invoice_id')
+        if not invoice_id:
+            return {'error': 'Invalid payload: missing id'}
+        header_vals = payload.get('header', {}) or {}
+        try:
+            result = request.env['account.move'].update_invoice(
+                invoice_id,
+                header_vals=header_vals,
+                add_line_items=payload.get('items_to_add', []) or [],
+                update_line_items=payload.get('items_to_update', []) or [],
+                remove_line_ids=payload.get('items_to_remove', []) or [],
+            )
+            return {'id': result['id'], 'name': result['name'], 'invoice_id': result['id'], 'invoice_name': result['name']}
+        except Exception as e:
+            return {'error': str(e)}
+
+    @http.route(
         '/api/quotation',
         type='json',
         auth='api_key',
@@ -60,6 +84,30 @@ class InvoiceAPIController(http.Controller):
         }
         try:
             result = request.env['sale.order'].create_quotation(header_vals, line_items)
+            return {'id': result['id'], 'name': result['name'], 'quotation_id': result['id'], 'quotation_name': result['name']}
+        except Exception as e:
+            return {'error': str(e)}
+
+    @http.route(
+        '/api/quotation/update',
+        type='json',
+        auth='api_key',
+        methods=['POST'],
+        csrf=False,
+    )
+    def update_quotation(self, **payload):
+        quotation_id = payload.get('id') or payload.get('quotation_id')
+        if not quotation_id:
+            return {'error': 'Invalid payload: missing id'}
+        header_vals = payload.get('header', {}) or {}
+        try:
+            result = request.env['sale.order'].update_quotation(
+                quotation_id,
+                header_vals=header_vals,
+                add_line_items=payload.get('items_to_add', []) or [],
+                update_line_items=payload.get('items_to_update', []) or [],
+                remove_line_ids=payload.get('items_to_remove', []) or [],
+            )
             return {'id': result['id'], 'name': result['name'], 'quotation_id': result['id'], 'quotation_name': result['name']}
         except Exception as e:
             return {'error': str(e)}
