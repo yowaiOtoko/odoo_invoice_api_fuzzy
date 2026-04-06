@@ -35,8 +35,10 @@ Both routes expect **JSON** body, **POST**, and use ``auth='api_key'`` (configur
 +---------------------+------+----------+----------------------------------------+
 | payment_reference   | str  | no       | Payment reference                      |
 +---------------------+------+----------+----------------------------------------+
-| payment_term_id     | int  | no       | ``account.payment.term`` id (B2B due date). If omitted: partner receivable term, then company ``account_payment_term_id`` if present, then standard ``account.account_payment_term_30days`` when installed, else first available term |
+| payment_term_id     | int  | no       | ``account.payment.term`` id (B2B)      |
 +---------------------+------+----------+----------------------------------------+
+
+If ``payment_term_id`` is omitted, the invoice uses the partner receivable term, then the company ``account_payment_term_id`` when present, then standard ``account.account_payment_term_30days`` when installed, otherwise the first available term.
 
 **Line item** (each element of ``items``): specify the product **either** by ``product_id`` **or** by ``product_name`` (or legacy ``name``).
 
@@ -62,7 +64,6 @@ Both routes expect **JSON** body, **POST**, and use ``auth='api_key'`` (configur
 
 ::
 
-
   {
     "id": 42,
     "name": "INV/2025/0001",
@@ -74,7 +75,6 @@ Both routes expect **JSON** body, **POST**, and use ``auth='api_key'`` (configur
 
 ::
 
-
   {
     "error": "Invalid payload"
   }
@@ -82,7 +82,6 @@ Both routes expect **JSON** body, **POST**, and use ``auth='api_key'`` (configur
 or
 
 ::
-
 
   {
     "error": "Product with id 999 not found or not usable."
@@ -115,7 +114,6 @@ or
 
 ::
 
-
   {
     "id": 10,
     "name": "S00010",
@@ -134,7 +132,6 @@ or
 Create an invoice with one line by product id and one by name:
 
 ::
-
 
   POST /api/invoice
   {
