@@ -61,6 +61,13 @@ class AccountMove(models.Model):
         company_id = header_vals.get('company_id') or self.env.company.id
         lines_vals = []
         for item in line_items:
+            # Text-only note lines (display_type = line_note) do not resolve to a product.
+            if item.get('display_type') == 'line_note' or item.get('is_note'):
+                lines_vals.append((0, 0, {
+                    'display_type': 'line_note',
+                    'name': item.get('name') or item.get('note') or '',
+                }))
+                continue
             resolved = resolver.resolve_line_item(item, name_cache, company_id)
             product = self.env['product.product'].browse(resolved['product_id'])
             line_vals = {
@@ -202,6 +209,20 @@ class AccountMove(models.Model):
         for line_id in (remove_line_ids or []):
             if line_id:
                 commands.append((2, int(line_id), 0))
+
+        # Note handling: the invoice note is stored as a line_note display-type line
+        # at the end of the invoice. It can only be edited while the invoice is a draft.
+        if header_vals and 'note' in header_vals:
+            if move.state != 'draft':
+                raise UserError('Cannot modify the note on a posted invoice.')
+            note_lines = move.invoice_line_ids.filtered(
+                lambda l: l.display_type == 'line_note'
+            )
+            for line in note_lines:
+                commands.append((2, line.id, 0))
+            note_text = header_vals.get('note')
+            if note_text:
+                commands.append((0, 0, {'display_type': 'line_note', 'name': note_text}))
 
         if commands:
             write_vals['invoice_line_ids'] = commands
