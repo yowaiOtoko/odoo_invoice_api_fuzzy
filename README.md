@@ -20,6 +20,62 @@ All routes use:
 - type='jsonrpc'
 - csrf=False
 
+## Magic link login (token link auth)
+
+Send a single-use, expiring link so a user can open an Odoo web session
+without entering credentials.
+
+- Create token: POST /api/token_link (auth='api_key')
+- Revoke token: POST /api/token_link/revoke (auth='api_key')
+- Consume link: GET /smart-doc/login/<token> (auth='public')
+
+### Create a token
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "call",
+  "params": {
+    "user_id": 2,
+    "expires_in": 24,
+    "redirect": "/web#id=5&model=account.move&view_type=form"
+  },
+  "id": 1
+}
+```
+
+- `user_id`: existing internal `res.users` id (required).
+- `expires_in`: token lifetime in hours (default 24, clamped 1..168).
+- `redirect`: optional same-host relative path used after login
+  (open-redirect guard rejects absolute/external URLs). Defaults to `/web`.
+
+Response:
+
+```json
+{
+  "token": "9b3L...",
+  "path": "/smart-doc/login/9b3L...",
+  "url": "https://odoo.example.com/smart-doc/login/9b3L...",
+  "user_id": 2,
+  "expires_at": "2026-08-02T10:00:00+00:00"
+}
+```
+
+Send `url` to the user. Opening it logs the user into the Odoo web client
+and redirects to `redirect` (or the web home). The token works once and
+expires automatically; only the SHA-256 hash of the token is stored.
+
+### Revoke a token
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "call",
+  "params": {"token": "9b3L..."},
+  "id": 2
+}
+```
+
 ## Installation
 
 1. Copy module into your custom addons path.
