@@ -23,11 +23,9 @@ class InvoiceAPIController(http.Controller):
             'description': item.get('description'),
             'detailed_type': item.get('detailed_type'),
             'tax_ids': item.get('tax_ids'),
-            'display_type': item.get('display_type'),
         }
-        product_id = item.get('product_id')
-        if product_id is not None and product_id != '':
-            payload['product_id'] = product_id
+        if 'product_id' in item:
+            payload['product_id'] = item['product_id']
             return payload
 
         payload['product_name'] = item.get('name', item.get('product_name'))
@@ -72,17 +70,16 @@ class InvoiceAPIController(http.Controller):
         ]
 
     def _delivery_lines_payload(self, picking):
-        moves = picking.move_ids
         return [
             {
                 'id': move.id,
-                'name': move.description_picking or '',
+                'name': move.name or '',
                 'product_id': move.product_id.id,
                 'product_name': move.product_id.name or '',
-                'quantity': float(move.quantity or 0),
-                'quantity_done': float(move.quantity or 0),
+                'quantity': float(move.product_uom_qty or 0),
+                'quantity_done': float(move.quantity_done or 0),
             }
-            for move in moves
+            for move in picking.move_ids_without_package
         ]
 
     @http.route(
@@ -98,9 +95,6 @@ class InvoiceAPIController(http.Controller):
         if not partner_id or not items:
             return {'error': 'Invalid payload'}
         line_items = [self._line_item_from_payload_item(it) for it in items]
-        note = payload.get('note')
-        if note:
-            line_items.append({'display_type': 'line_note', 'name': note})
         header_vals = {
             'partner_id': partner_id,
             'company_id': payload.get('company_id'),
@@ -216,11 +210,6 @@ class InvoiceAPIController(http.Controller):
                     'amount_total': float(move.amount_total or 0),
                     'amount_tax': float(move.amount_tax or 0),
                     'amount_residual': float(move.amount_residual or 0),
-                    'notes': [
-                        line.name or ''
-                        for line in move.invoice_line_ids
-                        if line.display_type == 'line_note'
-                    ],
                 },
                 'partner': self._partner_payload(partner) if partner else None,
                 'lines': self._invoice_lines_payload(move),
@@ -241,9 +230,6 @@ class InvoiceAPIController(http.Controller):
         if not partner_id or not items:
             return {'error': 'Invalid payload'}
         line_items = [self._line_item_from_payload_item(it) for it in items]
-        note = payload.get('note')
-        if note:
-            line_items.append({'display_type': 'line_note', 'name': note})
         header_vals = {
             'partner_id': partner_id,
             'company_id': payload.get('company_id'),
@@ -317,11 +303,6 @@ class InvoiceAPIController(http.Controller):
                     'amount_untaxed': float(order.amount_untaxed or 0),
                     'amount_total': float(order.amount_total or 0),
                     'amount_tax': float(order.amount_tax or 0),
-                    'notes': [
-                        line.name or ''
-                        for line in order.order_line
-                        if line.display_type == 'line_note'
-                    ],
                 },
                 'partner': self._partner_payload(partner) if partner else None,
                 'lines': self._quote_lines_payload(order),

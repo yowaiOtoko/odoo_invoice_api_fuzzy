@@ -48,9 +48,10 @@ class StockPicking(models.Model):
             quantity = float(resolved.get('quantity') or 1)
 
             line = {
-                'description_picking': resolved.get('name') or resolved.get('description') or item.get('product_name') or 'Product',
+                'name': resolved.get('name') or resolved.get('description') or item.get('product_name') or 'Product',
                 'product_id': resolved['product_id'],
-                'quantity': quantity,
+                'product_uom_qty': quantity,
+                'quantity_done': quantity,
                 'product_uom': resolved['uom_id'],
                 'location_id': header_vals.get('location_id') or picking_type.default_location_src_id.id,
                 'location_dest_id': header_vals.get('location_dest_id') or picking_type.default_location_dest_id.id,
@@ -63,9 +64,9 @@ class StockPicking(models.Model):
             'picking_type_id': picking_type_id,
             'origin': header_vals.get('origin'),
             'scheduled_date': header_vals.get('scheduled_date'),
+            'move_ids_without_package': move_vals,
             'location_id': header_vals.get('location_id') or picking_type.default_location_src_id.id,
             'location_dest_id': header_vals.get('location_dest_id') or picking_type.default_location_dest_id.id,
-            'move_ids': move_vals,
         }
 
         if not picking_vals.get('origin'):
@@ -102,9 +103,10 @@ class StockPicking(models.Model):
             resolved = resolver.resolve_line_item(item, name_cache, company_id)
             quantity = float(resolved.get('quantity') or 1)
             line_vals = {
-                'description_picking': resolved.get('name') or resolved.get('description') or item.get('product_name') or 'Product',
+                'name': resolved.get('name') or resolved.get('description') or item.get('product_name') or 'Product',
                 'product_id': resolved['product_id'],
-                'quantity': quantity,
+                'product_uom_qty': quantity,
+                'quantity_done': quantity,
                 'product_uom': resolved['uom_id'],
                 'location_id': picking.location_id.id,
                 'location_dest_id': picking.location_dest_id.id,
@@ -123,10 +125,11 @@ class StockPicking(models.Model):
             line_vals = {}
             if item.get('quantity') is not None:
                 quantity = float(item.get('quantity'))
-                line_vals['quantity'] = quantity
+                line_vals['product_uom_qty'] = quantity
+                line_vals['quantity_done'] = quantity
 
             if item.get('name') is not None or item.get('description') is not None:
-                line_vals['description_picking'] = item.get('name') or item.get('description')
+                line_vals['name'] = item.get('name') or item.get('description')
 
             if (item.get('product_id') is not None and item.get('product_id') != '') or (item.get('product_name') is not None and item.get('product_name') != ''):
                 resolved = resolver.resolve_line_item(item, name_cache, company_id)
@@ -141,7 +144,7 @@ class StockPicking(models.Model):
                 commands.append((2, int(line_id), 0))
 
         if commands:
-            write_vals['move_ids'] = commands
+            write_vals['move_ids_without_package'] = commands
 
         if write_vals:
             picking.write(write_vals)

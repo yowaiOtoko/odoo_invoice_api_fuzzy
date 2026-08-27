@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Quote report customization (body of sale.report_saleorder_document,
+        rendered inside the company external layout, e.g. web.external_layout_folder).
+
+        - Relabels the validity/expiration field (rendered "Échéance" in French)
+          to "Durée de validité".
+        - Adds a signature corner ("Bon pour accord") on quotations (draft/sent).
+
+        Invoices (account.report_invoice) are intentionally NOT modified: the
+        sign corner and the label live only in the quote report body, so the
+        shared external layout (folder) keeps invoices unchanged.
+    -->
+    <template id="report_saleorder_document_quote_custom"
+              inherit_id="sale.report_saleorder_document">
+        <!-- Target structurally (name=expiration_date) so it works whatever the
+             language of the base template arch (fr_FR loads translate it to
+             "Échéance"; a text-based xpath would only match one language). -->
+        <xpath expr="//div[@name='expiration_date']/strong" position="replace">
+            <strong>Durée de validité</strong>
+        </xpath>
+        <xpath expr="//div[span[@t-field='doc.note']]" position="after">
+            <t t-if="doc.state in ['draft', 'sent']">
+                <div class="row mt-4" name="sign_corner">
+                    <div class="col-7"></div>
+                    <div class="col-5 border rounded-1 p-3 text-center">
+                        <strong class="d-block mb-4">Bon pour accord</strong>
+                        <div style="min-height: 2.5cm;"></div>
+                        <div class="border-top pt-1 text-muted">Date et signature du client</div>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+    </template>
+</odoo>
