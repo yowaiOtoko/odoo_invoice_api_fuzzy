@@ -60,10 +60,9 @@ class SmartDocLoginToken(models.Model):
         copy=False,
     )
 
-    _token_hash_uniq = models.Constraint(
-        'UNIQUE (token_hash)',
-        'Token already exists.',
-    )
+    _sql_constraints = [
+        ('token_hash_uniq', 'UNIQUE (token_hash)', 'Token already exists.'),
+    ]
 
     @api.model
     def create_token(self, user_id, expires_in_hours=24, redirect_url=None):
