@@ -57,7 +57,7 @@ class TokenLoginController(http.Controller):
 
     @http.route(
         '/api/token_link',
-        type='jsonrpc',
+        type='json',
         auth='api_key',
         methods=['POST'],
         csrf=False,
@@ -91,7 +91,7 @@ class TokenLoginController(http.Controller):
 
     @http.route(
         '/api/token_link/revoke',
-        type='jsonrpc',
+        type='json',
         auth='api_key',
         methods=['POST'],
         csrf=False,
